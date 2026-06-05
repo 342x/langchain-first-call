@@ -1,0 +1,314 @@
+/* MemoryPanel.css */
+
+.memory-panel {
+  position: fixed;
+  right: 0;
+  top: 0;
+  width: 480px;
+  height: 100vh;
+  background: white;
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.memory-panel.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid #e0e0e0;
+  border-top-color: #007aff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* 头部 */
+.memory-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e5e5ea;
+  background: #f8f9fa;
+}
+
+.memory-panel-header h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.icon-btn, .danger-btn, .close-btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.icon-btn {
+  background: #e5e5ea;
+}
+
+.danger-btn {
+  background: #ff3b30;
+  color: white;
+}
+
+.close-btn {
+  background: #8e8e93;
+  color: white;
+}
+
+/* 导入/导出面板 */
+.import-export-panel {
+  display: flex;
+  gap: 12px;
+  padding: 12px 20px;
+  background: #f0f0f0;
+  border-bottom: 1px solid #e5e5ea;
+}
+
+.import-export-panel button,
+.import-btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background: white;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+/* Toast */
+.toast {
+  position: fixed;
+  top: 20px;
+  right: 500px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  color: white;
+  font-size: 14px;
+  z-index: 1100;
+  animation: slideIn 0.3s ease;
+}
+
+.toast.success {
+  background: #34c759;
+}
+
+.toast.error {
+  background: #ff3b30;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* 滚动区域 */
+.memory-panel > *:not(.memory-panel-header):not(.import-export-panel):not(.memory-panel-footer) {
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* 记忆区块 */
+.memory-section {
+  padding: 16px 20px;
+  border-bottom: 1px solid #e5e5ea;
+}
+
+.memory-section h3 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+}
+
+.section-hint {
+  margin: 0 0 12px 0;
+  font-size: 12px;
+  color: #8e8e93;
+}
+
+/* 偏好设置网格 */
+.preferences-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.pref-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pref-item label {
+  font-size: 12px;
+  color: #6c6c70;
+}
+
+.pref-item select,
+.pref-item input {
+  padding: 8px;
+  border: 1px solid #d1d1d6;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+/* 事实记忆列表 */
+.facts-list {
+  max-height: 200px;
+  overflow-y: auto;
+  margin-bottom: 12px;
+}
+
+.empty-state {
+  padding: 20px;
+  text-align: center;
+  color: #8e8e93;
+  background: #f8f9fa;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.fact-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.fact-content {
+  flex: 1;
+  font-size: 14px;
+}
+
+.fact-key {
+  font-weight: 600;
+  color: #007aff;
+}
+
+.fact-value {
+  color: #1c1c1e;
+}
+
+.fact-source {
+  font-size: 11px;
+  color: #8e8e93;
+  margin-left: 8px;
+}
+
+.fact-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.fact-actions button,
+.conv-actions button {
+  padding: 4px 8px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 14px;
+  border-radius: 4px;
+}
+
+.fact-actions button:hover {
+  background: #f0f0f0;
+}
+
+/* 添加事实表单 */
+.add-fact-form {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.add-fact-form input {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #d1d1d6;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.add-fact-form button {
+  padding: 8px 12px;
+  background: #007aff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* 历史会话列表 */
+.conversations-list {
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.conversation-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.conv-info {
+  flex: 1;
+}
+
+.conv-title {
+  font-weight: 500;
+  display: block;
+  font-size: 14px;
+}
+
+.conv-date {
+  font-size: 11px;
+  color: #8e8e93;
+}
+
+.conv-msg-count {
+  font-size: 11px;
+  color: #8e8e93;
+  margin-left: 8px;
+}
+
+.conv-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* 页脚 */
+.memory-panel-footer {
+  padding: 12px 20px;
+  border-top: 1px solid #e5e5ea;
+  background: #f8f9fa;
+  font-size: 11px;
+  color: #8e8e93;
+  text-align: center;
+}

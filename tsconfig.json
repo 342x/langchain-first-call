@@ -26,7 +26,7 @@
   "include": [
     "scripts/**/*.ts",
     "**/*.ts"
-  ],
+, "scripts/Fe/web/src/components/MemoryPanel.tsx", "scripts/Fe/web/src/hooks/useMemoryStory.tsx"  ],
   "exclude": [
     "node_modules",
     "dist",
