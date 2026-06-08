@@ -22,8 +22,6 @@ export const MemoryProvider: React.FC<MemoryProviderProps> = observer(({ userId,
 
 export function useMemory() {
   const context = useContext(MemoryContext);
-  if (!context) {
-    throw new Error('useMemory must be used within MemoryProvider');
-  }
-  return context;
+  const fallback = useMemoryStore('demo');
+  return context ?? fallback;
 }

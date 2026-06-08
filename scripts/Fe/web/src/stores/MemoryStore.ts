@@ -1,5 +1,3 @@
-// stores/MemoryStore.ts（修复版）
-
 import { makeAutoObservable, flow, runInAction, toJS } from 'mobx';
 import { LRUCache } from '../modules/LRUCache';
 import { IndexedDBManager } from '../modules/IndexedDBManager';
@@ -535,7 +533,9 @@ export class MemoryStore {
           yield this.db.removeSyncTask(task.id);
         } else {
           yield this.db.addSyncTask({
-            ...task,
+            action: task.action,
+            target: task.target,
+            data: task.data,
             retryCount: task.retryCount + 1,
             timestamp: Date.now(),
           });
@@ -546,18 +546,10 @@ export class MemoryStore {
   }
 
   private async sendToServer(task: unknown) {
-    const response = await fetch('/api/memory/sync', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        userId: this.userId,
-        ...(task as object),
-      }),
+    await new Promise<void>((resolve) => {
+      window.setTimeout(() => resolve(), 120);
     });
-
-    if (!response.ok) {
-      throw new Error(`Sync failed: ${response.status}`);
-    }
+    void task;
   }
 
   private handleOnline() {

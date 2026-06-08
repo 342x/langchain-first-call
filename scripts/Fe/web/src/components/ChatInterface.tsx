@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
 import { useMemory } from '../contexts/MemoryProvider';
-import './ChatInterface.css';
+import { useUserProfileStore } from '../hooks/useUserProfileStore';
+import './ChatInterface.less';
 
 interface ChatInterfaceProps {
   onOpenMemoryPanel?: () => void;
@@ -9,6 +10,7 @@ interface ChatInterfaceProps {
 
 export const ChatInterface: React.FC<ChatInterfaceProps> = observer(({ onOpenMemoryPanel }) => {
   const store = useMemory();
+  const profile = useUserProfileStore();
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -38,6 +40,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = observer(({ onOpenMem
       if (userMessage.toLowerCase().startsWith('我叫')) {
         const name = userMessage.slice(3);
         store.addFact('userName', name, 'user_declared');
+        profile.setName(name);
         store.addMessage('assistant', `好的，我记住了，你叫 ${name}。`);
       } else if (userMessage.toLowerCase().includes('记住')) {
         store.addMessage('assistant', '好的，我会记住这个信息。');
