@@ -1,6 +1,6 @@
 // stores/MemoryStore.ts（修复版）
 
-import { makeAutoObservable, flow, runInAction } from 'mobx';
+import { makeAutoObservable, flow, runInAction, toJS } from 'mobx';
 import { LRUCache } from '../modules/LRUCache';
 import { IndexedDBManager } from '../modules/IndexedDBManager';
 
@@ -115,7 +115,7 @@ export class MemoryStore {
       deleteConversation: flow,
       clearAllMemories: flow,
       syncWithServer: flow,
-    });
+    } as any);
 
     this.userId = userId;
     this.lruCache = new LRUCache(50, this.handleEviction.bind(this));
@@ -200,9 +200,9 @@ export class MemoryStore {
 
   private async persistLongTermMemory() {
     await this.db.saveLongTermMemory(`memory_${this.userId}`, {
-      preferences: this.preferences,
-      facts: this.facts,
-      savedQueries: this.savedQueries,
+      preferences: toJS(this.preferences),
+      facts: toJS(this.facts),
+      savedQueries: toJS(this.savedQueries),
     });
   }
 
@@ -359,7 +359,7 @@ export class MemoryStore {
     await this.db.addSyncTask({
       action: 'update',
       target: 'preference',
-      data: this.preferences,
+      data: toJS(this.preferences),
       timestamp: Date.now(),
       retryCount: 0,
     });

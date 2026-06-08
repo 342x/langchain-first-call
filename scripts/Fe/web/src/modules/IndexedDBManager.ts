@@ -10,6 +10,22 @@ export class IndexedDBManager {
     this.readyPromise = this.init();
   }
 
+  private sanitizeForIDB<T>(value: T): T {
+    const sc = (globalThis as unknown as { structuredClone?: <U>(v: U) => U }).structuredClone;
+    if (sc) {
+      try {
+        return sc(value);
+      } catch {
+      }
+    }
+
+    try {
+      return JSON.parse(JSON.stringify(value)) as T;
+    } catch {
+      return null as T;
+    }
+  }
+
   private async init(): Promise<void> {
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(DB_NAME, DB_VERSION);
@@ -135,7 +151,7 @@ export class IndexedDBManager {
     const db = await this.getDB();
     const tx = db.transaction(['longTermMemory'], 'readwrite');
     const store = tx.objectStore('longTermMemory');
-    store.put({ key, value, updatedAt });
+    store.put({ key, value: this.sanitizeForIDB(value), updatedAt });
     return new Promise((resolve, reject) => {
       tx.oncomplete = () => resolve();
       tx.onerror = () => reject(tx.error);
@@ -185,7 +201,7 @@ export class IndexedDBManager {
     const tx = db.transaction(['syncQueue'], 'readwrite');
     const store = tx.objectStore('syncQueue');
     return new Promise((resolve, reject) => {
-      const request = store.add({ ...task, retryCount: task.retryCount ?? 0 });
+      const request = store.add(this.sanitizeForIDB({ ...task, retryCount: task.retryCount ?? 0 }));
       request.onsuccess = () => resolve(request.result as number);
       request.onerror = () => reject(request.error);
     });
