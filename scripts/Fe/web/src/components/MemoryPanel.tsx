@@ -23,6 +23,20 @@ export const MemoryPanel: React.FC<MemoryPanelProps> = observer(({ onClose }) =>
     setTimeout(() => setToast(null), 3000);
   };
 
+  const handleSaveCurrentConversation = async () => {
+    const id = await store.saveCurrentSession();
+    if (id) {
+      showToast('会话已保存', 'success');
+    } else {
+      showToast('当前没有可保存的会话', 'error');
+    }
+  };
+
+  const handleRefreshHistory = async () => {
+    await store.loadRecentConversations();
+    showToast('已刷新历史会话', 'success');
+  };
+
   // ========== 偏好设置 ==========
   const handleUpdatePreference = async (key: string, value: unknown) => {
     await store.updatePreferences({ [key]: value });
@@ -301,10 +315,17 @@ export const MemoryPanel: React.FC<MemoryPanelProps> = observer(({ onClose }) =>
           <p className="section-hint">
             点击恢复可回到之前的对话，AI 会记住之前的上下文。
           </p>
+
+          <div className="history-actions">
+            <button onClick={handleSaveCurrentConversation}>💾 保存当前会话</button>
+            <button onClick={handleRefreshHistory}>🔄 刷新</button>
+          </div>
           
           <div className="conversations-list">
             {store.recentConversations.length === 0 ? (
-              <div className="empty-state">暂无历史会话</div>
+              <div className="empty-state">
+                暂无历史会话。先在对话里聊几句，然后点击“保存当前会话”或聊天区右上角 💾。
+              </div>
             ) : (
               store.recentConversations.map(conv => (
                 <div key={conv.id} className="conversation-item">

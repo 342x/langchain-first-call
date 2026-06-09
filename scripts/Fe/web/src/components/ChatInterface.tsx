@@ -143,7 +143,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = observer(({ onOpenMem
           </button>
         </div>
         <div className="input-hint">
-          💡 AI 会记住你告诉它的信息，可以在记忆面板中查看和编辑
+          💡 历史会话需要手动保存：点击右上角 💾 或在记忆面板的「历史会话」里保存
         </div>
       </div>
     </div>

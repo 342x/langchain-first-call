@@ -82,7 +82,7 @@ export class IndexedDBManager {
     const db = await this.getDB();
     const tx = db.transaction(['conversations'], 'readwrite');
     const store = tx.objectStore('conversations');
-    store.put(conversation);
+    store.put(this.sanitizeForIDB(conversation));
     return new Promise((resolve, reject) => {
       tx.oncomplete = () => resolve();
       tx.onerror = () => reject(tx.error);
@@ -137,7 +137,7 @@ export class IndexedDBManager {
     const tx = db.transaction(['conversations'], 'readwrite');
     const store = tx.objectStore('conversations');
     for (const conv of conversations) {
-      store.put(conv);
+      store.put(this.sanitizeForIDB(conv));
     }
     return new Promise((resolve, reject) => {
       tx.oncomplete = () => resolve();
@@ -257,7 +257,7 @@ export class IndexedDBManager {
     const db = await this.getDB();
     const tx = db.transaction(['messages'], 'readwrite');
     const store = tx.objectStore('messages');
-    store.put({ ...message, conversationId });
+    store.put(this.sanitizeForIDB({ ...message, conversationId }));
     return new Promise((resolve, reject) => {
       tx.oncomplete = () => resolve();
       tx.onerror = () => reject(tx.error);
