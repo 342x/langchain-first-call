@@ -18,6 +18,51 @@ function formatTime(ts: number) {
   return new Date(ts).toLocaleString()
 }
 
+function buildBudgetedContext(params: {
+  userName: string | null
+  recentMessages: Array<{ role: 'user' | 'assistant'; content: string }>
+  hits: KnowledgeHit[]
+  maxChars: number
+  topK: number
+  maxTurns: number
+}) {
+  const { userName, recentMessages, hits, maxChars, topK, maxTurns } = params
+
+  const facts = userName ? `userName=${userName}` : ''
+  const recent = recentMessages
+    .slice(-maxTurns * 2)
+    .map((m) => `${m.role}: ${m.content}`)
+    .join('\n')
+  const retrieved = hits
+    .slice(0, topK)
+    .map((h, i) => `资料${i + 1}(${h.score.toFixed(2)}): ${h.doc.title}\n${h.doc.content}`)
+    .join('\n\n')
+
+  const parts: Array<{ title: string; text: string }> = [
+    { title: 'Facts', text: facts },
+    { title: 'Recent', text: recent },
+    { title: 'Retrieved', text: retrieved },
+  ].filter((p) => p.text.trim().length > 0)
+
+  let remaining = Math.max(0, maxChars)
+  const out: string[] = []
+
+  for (const p of parts) {
+    if (remaining <= 0) break
+    const header = `[${p.title}]`
+    const block = `${header}\n${p.text}`.trim()
+    const cut = block.length > remaining ? `${block.slice(0, remaining).trimEnd()}\n…` : block
+    out.push(cut)
+    remaining -= cut.length + 2
+  }
+
+  const context = out.join('\n\n').trim()
+  return {
+    context,
+    contextChars: context.length,
+  }
+}
+
 function buildAnswer(question: string, hits: KnowledgeHit[], userName: string | null) {
   const now = Date.now()
   const top = hits.slice(0, 3)
@@ -69,6 +114,11 @@ export class AgentChatStore {
   isThinking = false
   private kb: KnowledgeBaseStore
   private profile: UserProfileStore
+  contextBudget = {
+    maxChars: 1400,
+    topK: 3,
+    maxTurns: 4,
+  }
   lastRun:
     | {
         id: string
@@ -78,6 +128,8 @@ export class AgentChatStore {
         latencyMs: number
         mode: 'profile' | 'kb'
         context: string
+        contextChars: number
+        budget: { maxChars: number; topK: number; maxTurns: number }
         hits: Array<{ id: string; title: string; score: number; content: string }>
       }
     | null = null
@@ -98,6 +150,10 @@ export class AgentChatStore {
 
   setInput(value: string) {
     this.input = value
+  }
+
+  setBudget(patch: Partial<{ maxChars: number; topK: number; maxTurns: number }>) {
+    this.contextBudget = { ...this.contextBudget, ...patch }
   }
 
   clear() {
@@ -135,6 +191,8 @@ export class AgentChatStore {
         latencyMs: now - startedAt,
         mode: 'profile',
         context: '',
+        contextChars: 0,
+        budget: { ...this.contextBudget },
         hits: [],
       }
       this.messages.push({
@@ -151,10 +209,18 @@ export class AgentChatStore {
     await sleep(420 + Math.floor(Math.random() * 580))
     const answer = buildAnswer(q, hits, this.profile.name)
     const finishedAt = Date.now()
-    const context = hits
-      .slice(0, 3)
-      .map((h, i) => `资料 ${i + 1}：${h.doc.title}\n${h.doc.content}`)
-      .join('\n\n')
+    const recentMessages = this.messages
+      .filter((m): m is AgentMessage & { role: 'user' | 'assistant' } => m.role !== 'system')
+      .slice(-20)
+      .map((m) => ({ role: m.role, content: m.content }))
+    const budgeted = buildBudgetedContext({
+      userName: this.profile.name,
+      recentMessages,
+      hits,
+      maxChars: this.contextBudget.maxChars,
+      topK: this.contextBudget.topK,
+      maxTurns: this.contextBudget.maxTurns,
+    })
     this.lastRun = {
       id: runId,
       question: q,
@@ -162,7 +228,9 @@ export class AgentChatStore {
       finishedAt,
       latencyMs: finishedAt - startedAt,
       mode: 'kb',
-      context,
+      context: budgeted.context,
+      contextChars: budgeted.contextChars,
+      budget: { ...this.contextBudget },
       hits: hits.slice(0, 5).map((h) => ({
         id: h.doc.id,
         title: h.doc.title,

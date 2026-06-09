@@ -13,13 +13,17 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = observer(({ onOpenMem
   const profile = useUserProfileStore();
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [showAll, setShowAll] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const maxRendered = 120;
 
   // 自动滚动到底部
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [store.currentMessages]);
+
+  const renderedMessages = showAll ? store.currentMessages : store.currentMessages.slice(-maxRendered);
 
   // 发送消息
   const handleSend = async () => {
@@ -90,6 +94,14 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = observer(({ onOpenMem
 
       {/* 消息列表 */}
       <div className="chat-messages">
+        {!showAll && store.currentMessages.length > maxRendered ? (
+          <div className="window-banner">
+            <div>窗口化渲染：仅渲染最近 {maxRendered} 条（总计 {store.currentMessages.length} 条）</div>
+            <button type="button" onClick={() => setShowAll(true)}>
+              显示全部
+            </button>
+          </div>
+        ) : null}
         {store.currentMessages.length === 0 ? (
           <div className="empty-state">
             <div className="empty-icon">💬</div>
@@ -98,7 +110,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = observer(({ onOpenMem
           </div>
         ) : (
           <>
-            {store.currentMessages.map(msg => (
+            {renderedMessages.map(msg => (
               <div key={msg.id} className={`message ${msg.role}`}>
                 <div className="message-avatar">
                   {msg.role === 'user' ? '👤' : '🤖'}

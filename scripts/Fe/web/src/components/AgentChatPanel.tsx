@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react-lite'
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useAgentChatStore } from '../hooks/useAgentChatStore'
 import { useUserProfileStore } from '../hooks/useUserProfileStore'
 import styles from './AgentChatPanel.module.less'
@@ -8,6 +8,8 @@ export const AgentChatPanel = observer(function AgentChatPanel() {
   const agent = useAgentChatStore()
   const profile = useUserProfileStore()
   const listRef = useRef<HTMLDivElement>(null)
+  const [showAll, setShowAll] = useState(false)
+  const maxRendered = 120
 
   const hint = useMemo(() => {
     return '示例：我叫 张三 / 退款超过 30 天怎么办？ / 配送多久？ / 客服什么时候上班？'
@@ -19,6 +21,8 @@ export const AgentChatPanel = observer(function AgentChatPanel() {
     el.scrollTop = el.scrollHeight
   }, [agent.messages.length, agent.isThinking])
 
+  const renderedMessages = showAll ? agent.messages : agent.messages.slice(-maxRendered)
+
   return (
     <div className={styles.wrap}>
       <div className={styles.header}>
@@ -29,15 +33,33 @@ export const AgentChatPanel = observer(function AgentChatPanel() {
             {profile.name ? `（当前记住：${profile.name}）` : ''}
           </div>
         </div>
-        <button className={styles.btn} type="button" onClick={() => (agent.messages = [])}>
-          Clear
-        </button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {showAll ? (
+            <button className={styles.btn} type="button" onClick={() => setShowAll(false)}>
+              仅看最近
+            </button>
+          ) : null}
+          <button className={styles.btn} type="button" onClick={() => (agent.messages = [])}>
+            Clear
+          </button>
+        </div>
       </div>
 
       <div className={styles.grid}>
         <div className={styles.main}>
           <div className={styles.chat} ref={listRef}>
-            {agent.messages.map((m) => {
+            {!showAll && agent.messages.length > maxRendered ? (
+              <div className={styles.banner}>
+                <div className={styles.meta}>
+                  窗口化渲染：仅渲染最近 {maxRendered} 条（总计 {agent.messages.length} 条）
+                </div>
+                <button className={styles.btn} type="button" onClick={() => setShowAll(true)}>
+                  显示全部
+                </button>
+              </div>
+            ) : null}
+
+            {renderedMessages.map((m) => {
               const rowClass = `${styles.msgRow} ${m.role === 'user' ? styles.msgRowUser : ''}`
               const bubbleClass = `${styles.bubble} ${
                 m.role === 'user' ? styles.bubbleUser : m.role === 'system' ? styles.bubbleSystem : ''
@@ -91,12 +113,46 @@ export const AgentChatPanel = observer(function AgentChatPanel() {
         <div className={styles.side}>
           <div className={styles.card}>
             <h4 className={styles.cardTitle}>Agent Trace</h4>
+            <div className={styles.controls}>
+              <div>
+                <div className={styles.controlLabel}>maxChars</div>
+                <input
+                  className={styles.controlInput}
+                  type="number"
+                  value={agent.contextBudget.maxChars}
+                  onChange={(e) => agent.setBudget({ maxChars: Number(e.target.value || 0) })}
+                />
+              </div>
+              <div>
+                <div className={styles.controlLabel}>topK</div>
+                <input
+                  className={styles.controlInput}
+                  type="number"
+                  value={agent.contextBudget.topK}
+                  onChange={(e) => agent.setBudget({ topK: Number(e.target.value || 0) })}
+                />
+              </div>
+              <div>
+                <div className={styles.controlLabel}>maxTurns</div>
+                <input
+                  className={styles.controlInput}
+                  type="number"
+                  value={agent.contextBudget.maxTurns}
+                  onChange={(e) => agent.setBudget({ maxTurns: Number(e.target.value || 0) })}
+                />
+              </div>
+            </div>
+            <div style={{ height: 10 }} />
             {agent.lastRun ? (
               <div className={styles.kv}>
                 <div>mode</div>
                 <div className={styles.mono}>{agent.lastRun.mode}</div>
                 <div>latency</div>
                 <div className={styles.mono}>{agent.lastRun.latencyMs}ms</div>
+                <div>context</div>
+                <div className={styles.mono}>
+                  {agent.lastRun.contextChars} chars / budget {agent.lastRun.budget.maxChars}
+                </div>
                 <div>question</div>
                 <div className={styles.mono}>{agent.lastRun.question}</div>
                 <div>started</div>
